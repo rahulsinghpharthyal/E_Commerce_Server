@@ -7,11 +7,20 @@ dotenv.config({path: './config/.env'});
 
 const app = express();
 
+const allowedOrigins = ['http://localhost:5173', 'https://dummycommerce.netlify.app'];
+
 app.use(
     cors({
-        origin: 'https://dummycommerce.netlify.app/',
+        origin: function (origin, callback) {
+            // Allow requests with no origin (like mobile apps or Postman) or if origin is in the allowedOrigins
+            if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
-        credentials: true
+        credentials: true, // Allow credentials such as cookies, authorization headers
     })
 );
 
