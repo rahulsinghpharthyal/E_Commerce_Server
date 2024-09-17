@@ -11,13 +11,6 @@ app.use(
     cors({
         origin: ['http://localhost:5173', 'https://main--dummycommerce.netlify.app/', 'https://dummycommerce.netlify.app/'],
         methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
-        allowedHeaders: [
-            'Content-Type',
-            'Authorization',
-            'Cache-Control',
-            'Expires',
-            'Pragma'
-        ],
         credentials: true
     })
 );
