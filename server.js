@@ -9,7 +9,7 @@ const app = express();
 
 app.use(
     cors({
-        origin: ['http://localhost:5173', 'https://main--dummycommerce.netlify.app/', 'https://dummycommerce.netlify.app/'],
+        origin: 'https://dummycommerce.netlify.app/',
         methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
         credentials: true
     })
