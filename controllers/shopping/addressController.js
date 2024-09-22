@@ -18,7 +18,7 @@ const addAddress = async (req, res) => {
       phone,
       notes,
     });
-    console.log(newAddress);
+    // console.log(newAddress);
     res.status(201).json({ success: true, Data: newAddress, message: 'Address Added Successfully' });
   } catch (err) {
     return res
@@ -31,14 +31,14 @@ const addAddress = async (req, res) => {
 const getAllAddress = async (req, res) => {
   try {
     const  { userId } = req.params;
-    console.log(userId);
+    // console.log(userId);
     if (!userId)
       return res
         .status(401)
         .json({ success: false, message: "UserId is required" });
     const addressList = await UserAddress.find({ userId });
 
-    res.status(200).json({ success: true, Data: addressList });
+    return res.status(200).json({ success: true, Data: addressList });
   } catch (err) {
     console.log(err);
     return res

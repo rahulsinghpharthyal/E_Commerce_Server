@@ -4,6 +4,7 @@ const authenticate = async (req, res) => {
   //   console.log(req.user);
   try {
     const { id } = req.user;
+    // console.log('this is id', id);
     const foundUser = await User.findOne({ _id: id });
     if (!foundUser)
       return res.json({

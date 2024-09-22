@@ -1,7 +1,6 @@
 import OrderDetails from "../../models/order.js";
-import Cart from '../../models/Cart.js';
 import paypal from "../../helper/paypal.js";
-
+import { sendInvoice } from "../../helper/sendMail.js";
 
 const createOrder = async (req, res) => {
   try {
@@ -15,10 +14,10 @@ const createOrder = async (req, res) => {
       orderDate,
       orderUpdateDate,
       paymentId,
-      payedId,
+      payerId,
     } = req.body.orderData;
 
-    console.log(req.body);
+    // console.log(req.body);
     const create_payment_json = {
       intent: "sale",
       payer: {
@@ -48,9 +47,10 @@ const createOrder = async (req, res) => {
       ],
     };
 
+    // console.log(create_payment_json, 'create_payment_json');
     paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
       if (error) {
-        console.log('this error from payment', error);
+        // console.log('this error from payment', error);
         return res
           .status(500)
           .json({ success: false, message: "Error on creating payment" });
@@ -65,14 +65,14 @@ const createOrder = async (req, res) => {
           orderDate,
           orderUpdateDate,
           paymentId,
-          payedId,
+          payerId,
         });
         await newlyCreateOrder.save();
 
         const approvalURL = paymentInfo.links.find(
           (link) => link.rel === "approval_url"
         ).href;
-        console.log('this is approval URl', approvalURL);
+        // console.log('this is approval URl', approvalURL);
         return res
           .status(201)
           .json({ success: true, approvalURL, orderId: newlyCreateOrder._id });
@@ -88,27 +88,116 @@ const createOrder = async (req, res) => {
 
 const capturePayment = async (req, res) => {
   try {
-    const{paymentId, payerId, orderId} = req.body;
-    let order = await OrderDetails.findById(orderId);
-    if(!order){
-      return res.status(401).json({success: false, message: 'Order can not be found'})
+    const { paymentId, payerId, orderId } = req.body;
+    if (!orderId || !paymentId || !payerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: orderId, paymentId, or payerId",
+      });
     }
-    order.paymentStatus = 'successful';
-    order.orderStatus = 'completed';
+    let order = await OrderDetails.findById(orderId);
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order cannot be found" });
+    }
+    order.paymentStatus = "completed";
+    order.orderStatus = "successful";
     order.paymentId = paymentId;
     order.payerId = payerId;
 
-    const getCartId = order.cartId;
-    await Cart.findByIdAndDelete(getCartId);
-
     await order.save();
-    return res.status(201).json({success: true, message: 'Order Confirmed'})
-
+    return res.status(201).json({
+      success: true,
+      message: "Order confirmed, invoice sent!",
+    });
   } catch (err) {
+    console.log(err);
     return res
       .status(500)
       .json({ success: false, message: "Error Occur during payment!" });
   }
 };
 
-export { createOrder, capturePayment };
+const invoiceGenerate = (req, res) => {
+  try {
+    const { cartItems, userEmail, totalCartAmount } = req.body;
+    const invoice = {
+      merchant_info: {
+        email: "rahulpharthyal04@gmail.com",
+        business_name: "E-commerce",
+        phone: {
+          country_code: "001",
+          national_number: "03464646",
+        },
+        address: {
+          line1: "Germaine Pass",
+          city: "East Braxton",
+          state: "Connecticut",
+          postal_code: "504768",
+          country_code: "US",
+        },
+      },
+      billing_info: [
+        {
+          email: userEmail, // Customer's email from addressInfo
+        },
+      ],
+      items: cartItems?.map((item) => ({
+        name: item.title,
+        quantity: item.quantity,
+        unit_price: {
+          currency: "USD",
+          value: totalCartAmount,
+        },
+      })),
+      note: "Thank you for your purchase!",
+      terms: "No refunds after 30 days.",
+      total_amount: {
+        currency: "USD",
+        value: 300,
+      },
+    };
+
+    paypal.invoice.create(invoice, async (invoiceError, invoiceInfo) => {
+      if (invoiceError) {
+        console.error("Error creating invoice:", invoiceError);
+        return res.status(500).json({
+          success: false,
+          message: "Error occurred while creating the invoice",
+        });
+      } else {
+        return res.status(201).json({
+          success: true,
+          messsage: "Invoice Generated",
+          Data: invoiceInfo,
+        });
+      }
+    });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error on Generating Invoice" });
+  }
+};
+
+const sendInvoiceEmail = async (req, res) => {
+  try {
+    const { userEmail, invoice } = req.body;
+    if (!userEmail || !invoice)
+      return res.status.jaon({
+        success: false,
+        message: "Please proivde all details",
+      });
+
+    await sendInvoice(userEmail, "Your Invoice", invoice);
+    return res.status(200).json({success: true, message: 'Inovice Send to Your mail'})
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ success: false, message: "error on sending mail" });
+  }
+};
+
+export { createOrder, capturePayment, invoiceGenerate, sendInvoiceEmail };

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { OAuth2Client } from "google-auth-library";
 
 //register
 
@@ -83,6 +84,67 @@ const loginUser = async (req, res) => {
   }
 };
 
+
+// login with google 
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const verifyGoogleToken = async (token) => {
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+  return ticket.getPayload(); // Returns user info
+};
+
+// Google Login Handler
+  const googleLogin = async (req, res) => {
+  const { token } = req.body;
+  // console.log('tis is token', token);
+  try {
+    // Verify the token and get user info
+    const googleUser = await verifyGoogleToken(token);
+    console.log(googleUser);
+    // Check if the user exists in the database
+    let user = await User.findOne({ email: googleUser.email });
+
+    if (!user) {
+      // If not, create a new user
+      user = new User({
+        googleId: googleUser.sub,
+        email: googleUser.email,
+        userName: googleUser.name,
+      });
+      await user.save();
+    }
+
+    // Generate a JWT token for the user
+    const jwtToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_CLIENT, {
+      expiresIn: '1h',
+    });
+
+    return res.cookie("token", jwtToken, {
+        httpOnly: true,
+        secure: false,
+      }).json({
+      success: true,
+      message: 'Login successful',
+      Data: {
+        id: user._id,
+        userName: user.userName,
+        role: user.role,
+        email: user.email,
+        token: jwtToken,
+      },
+    });
+  } catch (error) {
+    console.error('Error during Google login', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid Google token',
+    });
+  }
+};
 // logout
 
 const logoutUser = async (req, res) => {
@@ -108,4 +170,4 @@ const logoutUser = async (req, res) => {
 
 // auth middleware
 
-export { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser, googleLogin};

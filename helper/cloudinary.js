@@ -4,8 +4,10 @@ import multer from "multer";
 const storage = new multer.memoryStorage();
 const upload = multer({ storage });
 
+console.log('this is cloudName', process.env.CLOUD_NAME);
 const imageUploadUtils = async (file) => {
   try {
+    console.log('this is paypal mode', process.env.PAYPAL_CLIENT_SECRET);
     cloudinary.config({
       cloud_name: process.env.CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
@@ -19,5 +21,6 @@ const imageUploadUtils = async (file) => {
     console.log("Cloudnary Upload Failed");
   }
 };
+
 
 export { imageUploadUtils, upload };
