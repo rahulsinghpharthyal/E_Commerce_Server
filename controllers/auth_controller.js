@@ -104,7 +104,7 @@ const verifyGoogleToken = async (token) => {
   try {
     // Verify the token and get user info
     const googleUser = await verifyGoogleToken(token);
-    console.log(googleUser);
+    // console.log(googleUser);
     // Check if the user exists in the database
     let user = await User.findOne({ email: googleUser.email });
 
