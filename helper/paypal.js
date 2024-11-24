@@ -1,5 +1,8 @@
 import paypal from "paypal-rest-sdk";
 
+
+
+console.log(process.env.PAYPAL_MODE)
 paypal.configure({
   mode: "sandbox",
   client_id:
@@ -8,7 +11,6 @@ paypal.configure({
     "EJweVoBqPkiZKMcs3mGXsVQA_SAukc7Ey9fcc6HuKIzX0_ChbUmY73GH0vMajvqIxZzWt8MkW4sKQR6s",
 });
 
-(function(){
-  console.log(process.env.PAYPAL_MODE);
-}())
+
+
 export default paypal;

@@ -1,8 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config({path: 'config/.env'});
-// import { configDotenv } from 'dotenv';
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import dotenv from "dotenv";
+dotenv.config({path: './config/.env'});
 
 import cors from 'cors';
 import Connection from './database/databaseConnection.js';
@@ -12,7 +11,6 @@ import Connection from './database/databaseConnection.js';
 //     });
 //   }
   
-console.log('PAYPAL_MODE:', process.env.PAYPAL_MODE);
 import trackAPIUsage from './middleware/trackAPIUsage.js';
 import loggingMiddleware from './middleware/loggingRequest.js';
 
@@ -21,7 +19,7 @@ const app = express();
 
 app.use(
     cors({
-        origin: ['http://localhost:5173', 'https://main--dummycommerce.netlify.app/', 'https://dummycommerce.netlify.app/'],
+        origin: ['http://localhost:5173', 'https://main--dummycommerce.netlify.app/', 'https://dummycommerce.netlify.app/', process.env.CLIENT_URI],
         methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
         withCredentials: true,
         credentials: true,
