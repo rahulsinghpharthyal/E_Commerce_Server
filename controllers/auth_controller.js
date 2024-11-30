@@ -126,7 +126,8 @@ const verifyGoogleToken = async (token) => {
 
     return res.cookie("token", jwtToken, {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: 'none'
       }).json({
       success: true,
       message: 'Login successful',
@@ -156,8 +157,8 @@ const logoutUser = async (req, res) => {
       res
       .clearCookie("token", {
         httpOnly: true,
-        secure: false,
-        path: '/'
+        secure: true,
+        sameSite: 'none'
       })
       .json({
         success: true,
